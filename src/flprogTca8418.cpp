@@ -43,10 +43,63 @@ void FLProgTca8418::pool()
 {
   if (_status == FLPROG_NOT_REDY_STATUS)
   {
+    RT_HW_Base.i2cInitDevice(_device);
+    if (!_device.link)
+    {
+      return;
+    }
+    if (_device.status == 1)
+    {
+      _status = FLPROG_WAIT_I2C_FIND_ADDRESS;
+      return;
+    }
+    else
+    {
+      return;
+    }
+  }
+  if (_status == FLPROG_WAIT_I2C_FIND_ADDRESS)
+  {
+    RT_HW_Base.i2cFindAdr(_device);
+    if (!_device.link)
+    {
+      return;
+    }
+    if (_device.codeErr)
+    {
+      _status = FLPROG_WAIT_I2C_REFIND_ADDRES_PAUSE;
+      _pauseStartTime = millis();
+      return;
+    }
+    else
+    {
+      _status = FLPROG_WAIT_I2C_DEVICE_INIT;
+      return;
+    }
+  }
+
+  if (_status == FLPROG_WAIT_I2C_REFIND_ADDRES_PAUSE)
+  {
+    if (flprog::isTimer(_pauseStartTime, 1000))
+    {
+      _status = FLPROG_WAIT_I2C_FIND_ADDRESS;
+    }
+    else
+    {
+      return;
+    }
+  }
+  if (_status == FLPROG_WAIT_I2C_DEVICE_INIT)
+  {
     init();
     return;
   }
   readData();
+  if (_device.codeErr)
+  {
+    _status = FLPROG_NOT_REDY_STATUS;
+    return;
+  }
 }
 
 uint8_t FLProgTca8418::getEvent()
@@ -72,8 +125,6 @@ uint8_t FLProgTca8418::flush()
 
 void FLProgTca8418::init()
 {
-  RT_HW_Base.i2cInitDevice(_device);
-  _status = FLPROG_READY_STATUS;
 
   //  GPIO
   //  set default all GIO pins to INPUT
@@ -126,6 +177,7 @@ void FLProgTca8418::init()
     }
   }
   flush();
+  _status = FLPROG_READY_STATUS;
 }
 
 uint8_t FLProgTca8418::available()
@@ -153,11 +205,11 @@ void FLProgTca8418::readData()
   uint8_t col = k % 10;
   if (row > 7)
   {
-    return ;
+    return;
   }
   if (col > 9)
   {
-    return ;
+    return;
   }
   _buttons[row][col] = position;
 }

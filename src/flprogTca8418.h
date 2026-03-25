@@ -46,4 +46,5 @@ protected:
   uint8_t _address;
   uint8_t _bus;
   bool _buttons[8][10] = {false}; // Assuming maximum of 8 rows and 10 columns
+  uint32_t _pauseStartTime;
 };
