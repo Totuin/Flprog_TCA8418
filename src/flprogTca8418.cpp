@@ -2,8 +2,28 @@
 
 FLProgTca8418::FLProgTca8418(uint8_t address, uint8_t bus, uint8_t rows, uint8_t columns)
 {
-  _address = address;
-  _bus = bus;
+  RT_HW_Base.i2cSetParam(_device, address, bus, RT_HW_I2C_SPEED);
+  privateCreate(rows, columns);
+}
+
+FLProgTca8418::FLProgTca8418(uint8_t address, uint8_t bus, uint8_t rows, uint8_t columns, uint8_t expander, uint8_t channel)
+{
+  RT_HW_Base.i2cSetParam(_device, address, bus, RT_HW_I2C_SPEED, expander, channel);
+  privateCreate(rows, columns);
+}
+
+void FLProgTca8418::setReqestPerion(uint32_t period)
+{
+  if (_reqestPeriod == period)
+  {
+    return;
+  }
+  _lastRequestTime = millis();
+  _reqestPeriod = period;
+}
+
+void FLProgTca8418::privateCreate(uint8_t rows, uint8_t columns)
+{
   if (rows > 8)
   {
     _rows = 8;
@@ -20,7 +40,6 @@ FLProgTca8418::FLProgTca8418(uint8_t address, uint8_t bus, uint8_t rows, uint8_t
   {
     _columns = columns;
   }
-  RT_HW_Base.i2cSetParam(_device, _address, _bus, 0);
   _status = FLPROG_NOT_REDY_STATUS;
 }
 
@@ -187,8 +206,26 @@ uint8_t FLProgTca8418::available()
   return eventCount;
 }
 
+bool FLProgTca8418::canReqest()
+{
+  if (_reqestPeriod == 0)
+  {
+    return true;
+  }
+  if (flprog::isTimer(_lastRequestTime, _reqestPeriod))
+  {
+    _lastRequestTime = millis();
+    return true;
+  }
+  return false;
+}
+
 void FLProgTca8418::readData()
 {
+  if (!canReqest())
+  {
+    return;
+  }
   if (available() == 0)
   {
     return;

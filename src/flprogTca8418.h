@@ -29,22 +29,27 @@ class FLProgTca8418 : public AbstractFLProgClass
 {
 public:
   FLProgTca8418(uint8_t address, uint8_t bus, uint8_t rows, uint8_t columns);
+  FLProgTca8418(uint8_t address, uint8_t bus, uint8_t rows, uint8_t columns, uint8_t expander, uint8_t channel);
   void pool();
   uint8_t flush();
   uint8_t getEvent();
   uint8_t available();
   bool buttonState(uint8_t row, uint8_t column);
+  void setReqestPerion(uint32_t period);
+  uint32_t getReqestPerion() { return _reqestPeriod; }
 
 protected:
   void init();
+  void privateCreate(uint8_t rows, uint8_t columns);
   uint8_t readRegister(uint8_t reg);
   void writeRegister(uint8_t reg, uint8_t value);
   void readData();
+  bool canReqest();
   RT_HW_STRUCT_I2C_DEV _device;
   uint8_t _rows;
   uint8_t _columns;
-  uint8_t _address;
-  uint8_t _bus;
   bool _buttons[8][10] = {false}; // Assuming maximum of 8 rows and 10 columns
   uint32_t _pauseStartTime;
+  uint32_t _reqestPeriod = 20;
+  uint32_t _lastRequestTime = 0;
 };

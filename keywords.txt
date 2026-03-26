@@ -13,7 +13,9 @@ available	KEYWORD2
 buttonState	KEYWORD2
 flush	KEYWORD2
 getEvent	KEYWORD2
+getReqestPerion	KEYWORD2
 pool	KEYWORD2
+setReqestPerion	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
