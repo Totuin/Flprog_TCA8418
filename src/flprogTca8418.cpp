@@ -12,6 +12,31 @@ FLProgTca8418::FLProgTca8418(uint8_t address, uint8_t bus, uint8_t rows, uint8_t
   privateCreate(rows, columns);
 }
 
+void FLProgTca8418::setInterruptMode()
+{
+  if (_isInterruptMode)
+  {
+    return;
+  }
+  _isInterruptMode = true;
+  if (_status == FLPROG_NOT_REDY_STATUS)
+  {
+    _status = FLPROG_WAIT_I2C_DEVICE_INIT;
+  }
+}
+void FLProgTca8418::resetIntrruptMode()
+{
+  if (!_isInterruptMode)
+  {
+    return;
+  }
+  _isInterruptMode = false;
+  if (_status == FLPROG_NOT_REDY_STATUS)
+  {
+    _status = FLPROG_WAIT_I2C_DEVICE_INIT;
+  }
+}
+
 void FLProgTca8418::setReqestPerion(uint32_t period)
 {
   if (_reqestPeriod == period)
@@ -196,6 +221,14 @@ void FLProgTca8418::init()
     }
   }
   flush();
+  if (_isInterruptMode)
+  {
+    enableInterrupts();
+  }
+  else
+  {
+    disableInterrupts();
+  }
   _status = FLPROG_READY_STATUS;
 }
 
@@ -208,6 +241,10 @@ uint8_t FLProgTca8418::available()
 
 bool FLProgTca8418::canReqest()
 {
+  if (_isInterruptMode)
+  {
+    return false;
+  }
   if (_reqestPeriod == 0)
   {
     return true;
@@ -230,6 +267,19 @@ void FLProgTca8418::readData()
   {
     return;
   }
+  privateReadData();
+}
+
+void FLProgTca8418::interruptReadData()
+{
+  while (available())
+  {
+    privateReadData();
+  }
+}
+
+void FLProgTca8418::privateReadData()
+{
   uint16_t k = getEvent();
   bool position = false;
   if (k & 0x80)
@@ -262,4 +312,18 @@ bool FLProgTca8418::buttonState(uint8_t row, uint8_t col)
     return false;
   }
   return _buttons[row][col];
+}
+
+void FLProgTca8418::enableInterrupts()
+{
+  uint8_t value = readRegister(FLPROG_TCA8418_REG_CFG);
+  value |= (FLPROG_TCA8418_REG_CFG_GPI_IEN | FLPROG_TCA8418_REG_CFG_KE_IEN);
+  writeRegister(FLPROG_TCA8418_REG_CFG, value);
+}
+
+void FLProgTca8418::disableInterrupts()
+{
+  uint8_t value = readRegister(FLPROG_TCA8418_REG_CFG);
+  value &= ~(FLPROG_TCA8418_REG_CFG_GPI_IEN | FLPROG_TCA8418_REG_CFG_KE_IEN);
+  writeRegister(FLPROG_TCA8418_REG_CFG, value);
 }

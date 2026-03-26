@@ -37,6 +37,9 @@ public:
   bool buttonState(uint8_t row, uint8_t column);
   void setReqestPerion(uint32_t period);
   uint32_t getReqestPerion() { return _reqestPeriod; }
+  void setInterruptMode();
+  void resetIntrruptMode();
+  void interruptReadData();
 
 protected:
   void init();
@@ -45,6 +48,9 @@ protected:
   void writeRegister(uint8_t reg, uint8_t value);
   void readData();
   bool canReqest();
+  void enableInterrupts();
+  void disableInterrupts();
+  void privateReadData();
   RT_HW_STRUCT_I2C_DEV _device;
   uint8_t _rows;
   uint8_t _columns;
@@ -52,4 +58,5 @@ protected:
   uint32_t _pauseStartTime;
   uint32_t _reqestPeriod = 20;
   uint32_t _lastRequestTime = 0;
+  bool _isInterruptMode = false;
 };

@@ -14,7 +14,10 @@ buttonState	KEYWORD2
 flush	KEYWORD2
 getEvent	KEYWORD2
 getReqestPerion	KEYWORD2
+interruptReadData	KEYWORD2
 pool	KEYWORD2
+resetIntrruptMode	KEYWORD2
+setInterruptMode	KEYWORD2
 setReqestPerion	KEYWORD2
 
 #######################################
