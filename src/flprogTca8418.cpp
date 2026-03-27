@@ -68,83 +68,8 @@ void FLProgTca8418::privateCreate(uint8_t rows, uint8_t columns)
   _status = FLPROG_NOT_REDY_STATUS;
 }
 
-uint8_t FLProgTca8418::readRegister(uint8_t reg)
-{
-  RT_HW_Base.i2cWrite(_device, reg);
-  RT_HW_Base.i2cRead(_device);
-  return _device.bf8;
-}
 
-void FLProgTca8418::writeRegister(uint8_t reg, uint8_t value)
-{
-  uint8_t data[2];
-  data[0] = reg;
-  data[1] = value;
-  RT_HW_Base.i2cWriteArr(_device, data, 2);
-}
 
-void FLProgTca8418::pool()
-{
-  if (_status == FLPROG_NOT_REDY_STATUS)
-  {
-    RT_HW_Base.i2cInitDevice(_device);
-    if (!_device.link)
-    {
-      return;
-    }
-    if (_device.status == 1)
-    {
-      _status = FLPROG_WAIT_I2C_FIND_ADDRESS;
-      return;
-    }
-    else
-    {
-      return;
-    }
-  }
-  if (_status == FLPROG_WAIT_I2C_FIND_ADDRESS)
-  {
-    RT_HW_Base.i2cFindAdr(_device);
-    if (!_device.link)
-    {
-      return;
-    }
-    if (_device.codeErr)
-    {
-      _status = FLPROG_WAIT_I2C_REFIND_ADDRES_PAUSE;
-      _pauseStartTime = millis();
-      return;
-    }
-    else
-    {
-      _status = FLPROG_WAIT_I2C_DEVICE_INIT;
-      return;
-    }
-  }
-
-  if (_status == FLPROG_WAIT_I2C_REFIND_ADDRES_PAUSE)
-  {
-    if (flprog::isTimer(_pauseStartTime, 1000))
-    {
-      _status = FLPROG_WAIT_I2C_FIND_ADDRESS;
-    }
-    else
-    {
-      return;
-    }
-  }
-  if (_status == FLPROG_WAIT_I2C_DEVICE_INIT)
-  {
-    init();
-    return;
-  }
-  readData();
-  if (_device.codeErr)
-  {
-    _status = FLPROG_NOT_REDY_STATUS;
-    return;
-  }
-}
 
 uint8_t FLProgTca8418::getEvent()
 {
@@ -257,7 +182,7 @@ bool FLProgTca8418::canReqest()
   return false;
 }
 
-void FLProgTca8418::readData()
+void FLProgTca8418::workPool()
 {
   if (!canReqest())
   {
