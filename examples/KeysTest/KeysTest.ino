@@ -6,7 +6,7 @@ bool state = 0;
 
 void setup()
 {
-  RT_HW_Base.i2cSetPins(20, 21, 0);
+      RT_HW_Base.i2cSetPins(4, 5, 0);
   Serial.begin(115200);
 }
 
